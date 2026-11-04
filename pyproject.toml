@@ -1,0 +1,15 @@
+[project]
+name = "backend"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "couchbase>=4.6.3",
+    "dotenv>=0.9.9",
+    "fastapi[standard]>=0.158.2",
+    "firebase-admin>=7.7.0",
+    "httpx>=0.28.1",
+    "mcp>=2.3.0",
+    "ollama>=0.6.3",
+    "psycopg[binary]>=3.3.8",
+    "sqlmodel>=0.0.48",
+]

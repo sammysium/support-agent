@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Record Search Test Sheet</title>
+<style>
+:root {
+  --bg: #f4f5f3; --surface: #fff; --fg: #1d2420; --muted: #5d675f; --line: #d5dad4; --head: #e8ebe6;
+  --accent: #1f6b4f; --code-bg: #1d2420; --code-fg: #e4ebe5;
+  --pass: #1f7a46; --pass-soft: #dff1e5; --fail: #b3322b; --fail-soft: #f8e1df;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #141a17; --surface: #1b2420; --fg: #e3e9e4; --muted: #9aa69e; --line: #2f3b35; --head: #222c27;
+    --accent: #6cc39b; --code-bg: #0e1311; --code-fg: #d7e2da;
+    --pass: #6cc98f; --pass-soft: #1d3527; --fail: #f08a82; --fail-soft: #3d201e;
+    color-scheme: dark;
+  }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; padding: 20px 16px 48px; }
+h1 { font-size: 1.4rem; margin: 0 0 4px; }
+.sub { color: var(--muted); margin: 0 0 16px; }
+code, pre { font-family: ui-monospace, "SFMono-Regular", Menlo, monospace; }
+.bar { display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: end; margin-bottom: 14px; }
+.bar label { display: grid; gap: 3px; font-size: 0.78rem; color: var(--muted); }
+.bar input { font: inherit; padding: 5px 8px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--fg); width: 190px; }
+.summary { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; margin-bottom: 12px; font-variant-numeric: tabular-nums; }
+.summary b.p { color: var(--pass); } .summary b.f { color: var(--fail); }
+.btn { font: inherit; font-size: 0.82rem; padding: 5px 11px; border-radius: 5px; border: 1px solid var(--line); background: var(--surface); color: var(--fg); cursor: pointer; }
+select.btn { padding: 4px 8px; }
+.saved { font-size: 0.78rem; color: var(--muted); }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; min-width: 1100px; }
+th, td { text-align: left; vertical-align: top; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+th { background: var(--head); font-size: 0.74rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); position: sticky; top: 0; z-index: 1; }
+tr.part td { background: var(--head); font-weight: 600; }
+tr.part td span { font-weight: 400; color: var(--muted); margin-left: 8px; }
+td.id { font-family: ui-monospace, Menlo, monospace; color: var(--accent); white-space: nowrap; width: 48px; }
+td.case { width: 220px; }
+td.case .tags { color: var(--muted); font-size: 0.76rem; margin-top: 3px; }
+td.steps { width: 360px; }
+td.steps ol { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+td.steps details summary { cursor: pointer; color: var(--accent); font-size: 0.8rem; margin-top: 2px; }
+td.steps pre { position: relative; margin: 6px 0 0; padding: 8px 60px 8px 8px; background: var(--code-bg); color: var(--code-fg); border-radius: 5px; font-size: 0.72rem; overflow-x: auto; white-space: pre; max-width: 520px; }
+.copy { position: absolute; top: 5px; right: 5px; font: inherit; font-size: 0.7rem; padding: 2px 7px; border-radius: 4px; border: 1px solid #ffffff40; background: #ffffff18; color: var(--code-fg); cursor: pointer; }
+td.expect { width: 300px; color: var(--fg); }
+td.expect ul { margin: 0; padding-left: 16px; display: grid; gap: 3px; }
+td.result { width: 130px; }
+.toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.toggle button { font: inherit; font-size: 0.8rem; padding: 5px 10px; border: 0; background: var(--surface); color: var(--fg); cursor: pointer; }
+.toggle button + button { border-left: 1px solid var(--line); }
+.toggle button[data-v="pass"][aria-pressed="true"] { background: var(--pass-soft); color: var(--pass); font-weight: 600; }
+.toggle button[data-v="fail"][aria-pressed="true"] { background: var(--fail-soft); color: var(--fail); font-weight: 600; }
+td.comment { width: 260px; }
+td.comment textarea { width: 100%; min-height: 60px; font: inherit; font-size: 0.85rem; padding: 6px; border: 1px solid var(--line); border-radius: 5px; background: var(--bg); color: var(--fg); resize: vertical; }
+tr[data-status="pass"] td.id { box-shadow: inset 3px 0 var(--pass); }
+tr[data-status="fail"] td.id { box-shadow: inset 3px 0 var(--fail); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+</head>
+<body>
+<h1>Record Search Test Sheet</h1>
+<p class="sub">Results and comments are saved in this browser's IndexedDB as you go. Open this file in the same Chrome profile to keep them; use Export for a copy you can keep or share.</p>
+
+<div class="bar">
+  <label for="s-base">Backend URL<input id="s-base" value="http://localhost:8000"></label>
+  <label for="s-country">Country<input id="s-country" value="Malawi"></label>
+  <label for="s-env">User env<input id="s-env" value="dev"></label>
+  <label for="s-email">FO email<input id="s-email" value="fo.test@oneacrefund.org"></label>
+</div>
+
+<div class="summary">
+  <span id="counts"></span>
+  <label for="filter">Show <select id="filter" class="btn"><option value="all">All</option><option value="none">Not run</option><option value="pass">Passed</option><option value="fail">Failed</option></select></label>
+  <button class="btn" id="export" type="button">Export JSON</button>
+  <label class="btn" for="import">Import JSON<input id="import" type="file" accept="application/json" hidden></label>
+  <span class="saved" id="saved"></span>
+</div>
+
+<div class="table-wrap">
+  <table>
+    <thead><tr><th>ID</th><th>Case</th><th>Steps</th><th>Expected</th><th>Result</th><th>Comment</th></tr></thead>
+    <tbody id="rows"></tbody>
+  </table>
+</div>
+
+<script>
+const SITES = { 38428: "chiwiri site", 38330: "chilembwe site", 36837: "Kenya Demo Site" };
+const LINO = "fineract_client_38428_7966002";
+const LINO_REV = "1-73e9307c49a653f3762a379c8e133d72";
+
+const SEED_LOAN = {"id": 9900201, "accountNo": "009900201", "externalId": null, "status": {"id": 300, "code": "loanStatusType.active", "value": "Active", "pendingApproval": false, "waitingForDisbursal": false, "active": true, "closedObligationsMet": false, "closedWrittenOff": false, "closedRescheduled": false, "closed": false, "overpaid": false}, "clientId": 9900001, "clientAccountNo": "99000001", "clientName": "Daniel Banda", "clientOfficeId": 38428, "loanProductId": 274, "loanProductName": "Group Liability Loan", "loanProductShortName": "GLL", "loanType": {"id": 1, "code": "accountType.individual", "value": "Individual"}, "currency": {"code": "KES", "name": "Kenyan Shilling", "decimalPlaces": 2, "inMultiplesOf": 1, "displaySymbol": "KSh"}, "principal": 15000, "approvedPrincipal": 15000, "numberOfRepayments": 12, "loanCycle": 1, "inArrears": false, "timeline": {"submittedOnDate": [2024, 3, 5], "approvedOnDate": [2024, 3, 5], "expectedDisbursementDate": [2024, 3, 6], "actualDisbursementDate": [2024, 3, 6], "expectedMaturityDate": [2025, 3, 5]}, "summary": {"currency": {"code": "KES"}, "principalDisbursed": 15000, "principalPaid": 13960, "principalOutstanding": 1040, "totalExpectedRepayment": 15000, "totalRepayment": 13960, "totalOutstanding": 1040, "totalOverdue": 1040}};
+const SEED_REPAYMENT = {"transactionId": 9900301, "loanId": 9900201, "loanAccountNo": "009900201", "clientId": 9900001, "clientAccountNo": "99000001", "clientName": "Daniel Banda", "officeId": 38428, "officeName": "chiwiri site", "amount": 2500, "currency": {"code": "MWK"}, "paymentDate": [2024, 9, 7], "loanType": "Individual Liability Loan", "loanTypeCode": "ILL", "paymentTypeName": null, "mnoTransactionCode": "TESTMOCK0001"};
+
+// streamed endpoints send Server-Sent Events: print each progress line as it arrives, then a summary of the result
+const STREAM = "if startswith(\"data: \") then (.[6:] | fromjson | if .result then (.result[] | .document as $d | {search_stage, stage, message, ids: [.records[][$d].id?]} | tojson) elif .detail then \"ERROR \" + .detail else \"… \" + .message end) elif startswith(\"{\") then . else empty end";
+
+// --- step builders ------------------------------------------------------------------------------
+const start = (site, issue, expect) => ({ kind: "start", site, issue, expect, label: `Start the chat as office ${site}` });
+const next = (expect) => ({ kind: "next", expect, label: "None of these: search the next stage" });
+const pick = (doc_id, device, expect, label) => ({ kind: "select", doc_id, device, expect, label: label || `Pick ${doc_id}` });
+const raw = (label, body, expect) => ({ kind: "raw", label, body, expect });
+
+const SECTIONS = [
+  {
+    id: "A", title: "First search", blurb: "/start-session runs the LLM once and searches Couchbase in the officer's own office. Check the tool call in the backend log as well as the response.",
+    cases: [
+      { id: "A1", title: "Client by name", tags: ["find_client", "partial"], steps: [
+        start(38428, "I cannot find my client named Lino", ["Log: record_is_missing with find_client, {\"Client.displayName\": \"Lino\"}", "9 Client records, all Lino Test Demo …, stage couchbase", "message: Found 9 matching Client record(s) in your office."]) ] },
+      { id: "A2", title: "Client by name and account number, best match first", tags: ["find_client", "OR"], steps: [
+        start(38428, "I can't find my client Lino, account number 26779901", ["Both Client.displayName and Client.accountNo sent", "9 records; the first is Lino Test Demo Two (accountNo 26779901)"]) ] },
+      { id: "A3", title: "Wrong name, right account number", tags: ["find_client", "OR"], steps: [
+        start(38428, "I can't find my client Peter, account number 26779901", ["Exactly 1 record: Lino Test Demo Two", "The account number alone finds the client because client fields use OR"]) ] },
+      { id: "A4", title: "Group by name", tags: ["find_group"], steps: [
+        start(38428, "I can't find the group mwalawansetse", ["find_group, {\"Group.name\": \"mwalawansetse\"}", "1 Group record, id fineract_group_38428_389784"]) ] },
+      { id: "A5", title: "Loan through the client's account number", tags: ["find_loan", "join"], steps: [
+        start(38330, "I can't find the loan of my client with account number 26739911", ["find_loan, {\"Client.accountNo\": \"26739911\"}", "Loan 0118922311 with the Client (Ellen Fabiano) beside it in each record", "Answers in about a second; a timeout means idx_type_clientId is missing"]) ] },
+      { id: "A6", title: "Loan by its own account number", tags: ["find_loan"], steps: [
+        start(38330, "I can't find loan account 0118922311", ["find_loan, {\"Loan.accountNo\": \"0118922311\"}", "1 Loan record, id fineract_loan_38330_11892231"]) ] },
+      { id: "A7", title: "Repayment by transaction code", tags: ["find_repayment"], steps: [
+        start(38330, "I cannot find repayment with transaction code CGP628L3I3G", ["find_repayment, {\"Repayment.mnoTransactionCode\": \"CGP628L3I3G\"}", "2 Repayment records (Couchbase has two with this code)", "Never 20: that would mean the filter was dropped"]) ] },
+      { id: "A8", title: "Repayment by client account number and amount", tags: ["find_repayment", "join"], steps: [
+        start(38330, "My client with account number 23421648 paid 15000 but I can't find the repayment", ["find_repayment with Client.accountNo or Repayment.clientAccountNo, plus Repayment.amount 15000", "Only repayments of 15000 by account 23421648"]) ] },
+      { id: "A9", title: "Order by reference without the FS prefix", tags: ["find_order", "partial"], steps: [
+        start(38330, "I can't find the order with order ref 66129", ["find_order, {\"ClientOrder.orderRef\": \"66129\"}", "1 ClientOrder: FS66129, id odoo_order_38330_10316471"]) ] },
+      { id: "A10", title: "Order by client id", tags: ["find_order"], steps: [
+        start(38330, "I can't find the order of my client with client id 4053833", ["find_order, {\"ClientOrder.clientId\": 4053833}", "FS66129 among the records"]) ] },
+      { id: "A11", title: "Progress lines while it works", tags: ["stream"], steps: [
+        start(38428, "I can't find my client named Lino", ["Lines appear one by one, before the result: … Understanding your issue, then … Checking your office", "Result: search_stage couchbase_office, 9 ids", "With jq missing or the command lacking -N, everything arrives at once at the end"]) ] },
+      { id: "A12", title: "Details that can't be searched", tags: ["guard"], steps: [
+        start(38428, "I can't find my client whose phone number is 0999123456", ["If the model sends a field we don't search on: message Couldn't search for the Client: none of [...] can be searched on.", "No records, no search saved and no widening: no 'Checking other offices' line"]) ] },
+    ],
+  },
+  {
+    id: "B", title: "Widening the search", blurb: "When a stage finds nothing, the backend moves on by itself and streams a progress line for each stage (… Checking other offices in Malawi). It stops at the first stage with records, or answers search_stage done. /record-search/next is only for \"None of these\" when records were shown. Run a case's steps in one terminal, in order.",
+    cases: [
+      { id: "B1", title: "Exists nowhere: one request, no taps", tags: ["all stages"],
+        why: "Account 12345678 exists nowhere. The officer reports once and watches each stage go by; the last line closes the chat.",
+        steps: [
+        start(38428, "I can't find my client with account number 12345678", [
+          "… Understanding your issue", "… Checking your office", "… Checking other offices in Malawi", "… Checking Fineract for your office", "… Checking Fineract for the whole of Malawi",
+          "Result: search_stage done, ids []", "message: We couldn't find this Client anywhere in Malawi. Check the details and search again.", "In the database: issue_status completed"]) ] },
+      { id: "B2", title: "Client in another office's Couchbase", tags: ["couchbase country"], steps: [
+        start(38428, "I can't find my client Isaac Raphael, account number 25255414", [
+          "… Checking your office", "… Checking other offices in Malawi", "Result: search_stage couchbase_country, ids [fineract_client_38330_4053282]"]) ] },
+      { id: "B3", title: "Group in another office's Couchbase", tags: ["couchbase country"], steps: [
+        start(38428, "I can't find the group Tiyanjane", [
+          "… Checking other offices in Malawi", "Result: search_stage couchbase_country, ids [fineract_group_38330_393029]"]) ] },
+      { id: "B4", title: "Client only in Fineract, in the officer's office", tags: ["fineract office"], steps: [
+        start(38428, "I can't find my client Daniel Banda, account number 99000001", [
+          "… Checking your office", "… Checking other offices in Malawi", "… Checking Fineract for your office",
+          "Result: search_stage source_office, stage fineract, ids [fineract_client_38428_9900001]"]) ] },
+      { id: "B5", title: "None of these, then Fineract", tags: ["next", "fineract office"],
+        why: "Couchbase has a Chikondi in another office, so the first answer shows it. The officer says it's not theirs, and the search continues in Fineract.",
+        steps: [
+        start(38428, "I can't find the group Chikondi", [
+          "… Checking other offices in Malawi", "Result: search_stage couchbase_country, ids [fineract_group_38330_417183]"]),
+        next(["… Checking Fineract for your office", "Result: search_stage source_office, ids [fineract_group_38428_9900102]"]) ] },
+      { id: "B6", title: "Client only in Fineract, in another office", tags: ["fineract country"], steps: [
+        start(38330, "I can't find my client Daniel Banda, account number 99000001", [
+          "… Checking Fineract for your office", "… Checking Fineract for the whole of Malawi",
+          "Result: search_stage source_country, ids [fineract_client_38428_9900001]"]) ] },
+      { id: "B7", title: "None of these, all the way to the end", tags: ["next", "fineract country"],
+        why: "Isaac Raphael is in Couchbase under 38330, and in Fineract under 38330 too. Rejecting the Couchbase answer skips Fineract for your office (empty) and finds him in Fineract country-wide; rejecting that ends the chat.",
+        steps: [
+        start(38428, "I can't find my client Isaac Raphael, account number 25255414", ["Result: search_stage couchbase_country"]),
+        next(["… Checking Fineract for your office", "… Checking Fineract for the whole of Malawi", "Result: search_stage source_country, Isaac Raphael from Fineract"]),
+        next(["No progress lines: nothing is left to check", "Result: search_stage done, message We couldn't find this Client anywhere in Malawi…"]) ] },
+      { id: "B8", title: "Loan only in Fineract", tags: ["fineract office", "needs seed"], warn: true, steps: [
+        start(38428, "I can't find the loan of my client with account number 99000001", [
+          "… Checking Fineract for your office", "Result: search_stage source_office, ids [fineract_loan_38428_9900201]"]) ] },
+      { id: "B9", title: "Repayment only in Fineract", tags: ["fineract office", "needs seed"], warn: true, steps: [
+        start(38428, "I can't find the repayment with transaction code TESTMOCK0001 for my client with account number 99000001", [
+          "… Checking Fineract for your office", "Result: search_stage source_office, ids [fineract_repayment_38428_9900301]"]) ] },
+      { id: "B10", title: "Repayment that Fineract can't search", tags: ["fineract office", "guard"], steps: [
+        start(38428, "I can't find the repayment with transaction code ZZZ000111", [
+          "… Checking other offices in Malawi", "… Checking Fineract for your office",
+          "Result: search_stage done, message To search Fineract for a repayment we need the client's account number or name.",
+          "It stops there: no Fineract country step"]) ] },
+      { id: "B11", title: "Order past Couchbase", tags: ["odoo"], warn: true, steps: [
+        start(38428, "I can't find the order with order ref 99999", [
+          "… Checking your office", "… Checking other offices in Malawi",
+          "Result: search_stage done, stage odoo, message We couldn't find this ClientOrder on our servers, and searching Odoo isn't available yet."]) ] },
+      { id: "B12", title: "No search to continue", tags: ["error"], steps: [
+        start(38428, "I can't see the add new client button", ["… Checking your app settings", "feature_is_disabled answers; no search is saved"]),
+        next(["HTTP 400 before any stream: Chat … has no record search to continue"]) ] },
+      { id: "B13", title: "Unknown chat", tags: ["error"], steps: [
+        raw("Call /next with a chat id that doesn't exist", { path: "/record-search/next", body: { chat_id: "not-a-real-chat" } }, ["HTTP 404: Chat not-a-real-chat not found"]) ] },
+    ],
+  },
+  {
+    id: "C", title: "Diagnosing a pick", blurb: "/record-search/select takes the record the officer picked plus what the device has for that id, and returns where the record stops. It answers plain JSON, no stream.",
+    cases: [
+      { id: "C1", title: "Not on the device", tags: ["sync_gateway"], steps: [
+        start(38428, "I can't find my client Lino, account number 26779901", ["Lino Test Demo Two first"]),
+        pick(LINO, null, ["stage sync_gateway, action RESTART_DEVICE", "message: … it hasn't reached your device yet.", "Chat completed; updates has pick and diagnosis"], "Pick Lino Test Demo Two; the device doesn't have it") ] },
+      { id: "C2", title: "Older version on the device", tags: ["sync_gateway"], steps: [
+        start(38428, "I can't find my client Lino, account number 26779901", ["Lino Test Demo Two first"]),
+        pick(LINO, { id: LINO, rev: "0-olderrevision" }, ["stage sync_gateway, action RESTART_DEVICE", "message names both revisions: (0-olderrevision) and (1-73e93…)"], "Pick Lino; the device has an older revision") ] },
+      { id: "C3", title: "Latest version on the device but not shown", tags: ["app", "jira"], steps: [
+        start(38428, "I can't find my client Lino, account number 26779901", ["Lino Test Demo Two first"]),
+        pick(LINO, { id: LINO, rev: LINO_REV, syncTs: "2026-08-27T19:02:06.932Z" }, ["stage app, action ESCALALTE_TO_DEVELOPER", "A Jira bug titled Synced record not shown in the app: fineract_client_38428_7966002, with the Couchbase doc, Sync Gateway metadata and device doc attached"], "Pick Lino; the device has the same revision") ] },
+      { id: "C4", title: "Record from another office", tags: ["service desk"], steps: [
+        start(38428, "I can't find my client Isaac Raphael, account number 25255414", ["Result: search_stage couchbase_country, Isaac Raphael from 38330"]),
+        pick("fineract_client_38330_4053282", null, ["action CREATE_SERVICE_DESK_TICKET", "message: This record belongs to office 38330, not your office chiwiri site.", "note: Move fineract_client_38330_4053282 from office 38330 to chiwiri site (38428)"]) ] },
+      { id: "C5", title: "In Fineract, never reached Couchbase", tags: ["fineract", "jira"], steps: [
+        start(38428, "I can't find my client Daniel Banda, account number 99000001", ["Result: search_stage source_office, Daniel Banda"]),
+        pick("fineract_client_38428_9900001", null, ["stage fineract, action ESCALALTE_TO_DEVELOPER", "message: This Client is in Fineract, but it never reached our servers …", "Jira bug: In Fineract, missing from Couchbase: fineract_client_38428_9900001"]) ] },
+      { id: "C6", title: "In Fineract under another office", tags: ["fineract", "service desk"], steps: [
+        start(38330, "I can't find my client Daniel Banda, account number 99000001", ["Result: search_stage source_country, Daniel Banda in 38428"]),
+        pick("fineract_client_38428_9900001", null, ["stage fineract, action CREATE_SERVICE_DESK_TICKET", "message: This Client belongs to office chiwiri site in Fineract, not your office chilembwe site."]) ] },
+      { id: "C7", title: "Group in Fineract, never reached Couchbase", tags: ["fineract", "jira"], steps: [
+        start(38428, "I can't find the group Chikondi", ["Result: search_stage couchbase_country, chikondi from 38330"]),
+        next(["Result: search_stage source_office, Chikondi from Fineract"]),
+        pick("fineract_group_38428_9900102", null, ["stage fineract, action ESCALALTE_TO_DEVELOPER", "Jira bug for fineract_group_38428_9900102"]) ] },
+      { id: "C8", title: "Loan in Fineract, never reached Couchbase", tags: ["fineract", "needs seed"], warn: true, steps: [
+        start(38428, "I can't find the loan of my client with account number 99000001", ["Result: search_stage source_office, loan 009900201"]),
+        pick("fineract_loan_38428_9900201", null, ["stage fineract, action ESCALALTE_TO_DEVELOPER"]) ] },
+      { id: "C9", title: "Device sends a different id", tags: ["error"], steps: [
+        start(38428, "I can't find my client Lino, account number 26779901", ["Lino Test Demo Two first"]),
+        pick(LINO, { id: "fineract_client_38428_0", rev: LINO_REV }, ["HTTP 400: device_doc.id fineract_client_38428_0 does not match doc_id …"], "Pick Lino with a device doc for another id") ] },
+      { id: "C10", title: "Pick a record that wasn't shown", tags: ["error"], steps: [
+        start(38428, "I can't find my client Lino, account number 26779901", ["Lino Test Demo Two first"]),
+        pick("fineract_client_38330_4053282", null, ["HTTP 400: fineract_client_38330_4053282 isn't one of the records shown in this chat's last search"], "Pick Isaac Raphael, who wasn't in the results") ] },
+      { id: "C11", title: "Sync Gateway hasn't imported the latest change", tags: ["couchbase", "jira", "manual"], warn: true,
+        why: "No document has this problem today, so create it: stop Sync Gateway, edit Funani Mukwa (fineract_client_38428_4103623) in the Couchbase UI (change any field, keep officeId), run the steps, then start Sync Gateway again.",
+        steps: [
+        start(38428, "I can't find my client Funani Mukwa, account number 26572903", ["Funani Mukwa first"]),
+        pick("fineract_client_38428_4103623", null, ["stage couchbase, action ESCALALTE_TO_DEVELOPER", "message: … its latest version hasn't been picked up for syncing …"], "Pick Funani Mukwa") ] },
+      { id: "C12", title: "Record missing from the office's channel", tags: ["sync_gateway", "no fixture"], warn: true,
+        why: "Only one document lacks its office channel today (a blank-named client in office 38603), and it can't be found by name or account number. Skip this case unless your sync function can route a test record away from FsOffice_{officeId}.",
+        steps: [] },
+      { id: "C13", title: "Unknown chat", tags: ["error"], steps: [
+        raw("Call /select with a chat id that doesn't exist", { path: "/record-search/select", body: { chat_id: "not-a-real-chat", doc_id: LINO } }, ["HTTP 404: Chat not-a-real-chat not found"]) ] },
+    ],
+  },
+  {
+    id: "D", title: "Other endpoints", blurb: "Regression checks for what changed around the record search.",
+    cases: [
+      { id: "D1", title: "Service desk request from a chat", tags: ["jsm"], steps: [
+        start(38428, "I can't see the add new client button", ["feature_is_disabled response; note the chat_id"]),
+        raw("Ask for the feature to be enabled", { path: "/enable-feature-service-request", body: { chat_id: "__CHAT__", fo_email: "__EMAIL__", site_id: 38428, site_name: "chiwiri site", requested_service: "Enable create_client for Malawi", country: "__COUNTRY__", env: "__ENV__" } },
+          ["HTTP 201 with ticket_key (SUP-…) and url", "Chat marked completed"]) ] },
+      { id: "D2", title: "Service desk request for an unknown chat", tags: ["error"], steps: [
+        raw("Use a chat id that doesn't exist", { path: "/enable-feature-service-request", body: { chat_id: "not-a-real-chat", fo_email: "__EMAIL__", site_id: 38428, site_name: "chiwiri site", requested_service: "test", country: "__COUNTRY__", env: "__ENV__" } },
+          ["HTTP 404: Chat not-a-real-chat not found", "No Jira request created"]) ] },
+    ],
+  },
+];
+
+// --- IndexedDB: one record per case, {id, status: "pass" | "fail" | null, comment, updatedAt} ----
+const DB_NAME = "record-search-tests";
+const STORE = "results";
+const SETTINGS = "settings";
+
+function openDb() {
+  return new Promise((resolve, reject) => {
+    const request = indexedDB.open(DB_NAME, 1);
+    request.onupgradeneeded = () => {
+      request.result.createObjectStore(STORE, { keyPath: "id" });
+      request.result.createObjectStore(SETTINGS);
+    };
+    request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+  });
+}
+function tx(store, mode, work) {
+  return dbReady.then((db) => new Promise((resolve, reject) => {
+    const t = db.transaction(store, mode);
+    const result = work(t.objectStore(store));
+    t.oncomplete = () => resolve(result && "result" in result ? result.result : undefined);
+    t.onerror = () => reject(t.error);
+  }));
+}
+const dbReady = openDb();
+const getAll = () => tx(STORE, "readonly", (s) => s.getAll());
+const putResult = (record) => tx(STORE, "readwrite", (s) => s.put({ ...record, updatedAt: new Date().toISOString() }));
+const getSetting = (key) => tx(SETTINGS, "readonly", (s) => s.get(key));
+const putSetting = (key, value) => tx(SETTINGS, "readwrite", (s) => s.put(value, key));
+
+// --- commands -----------------------------------------------------------------------------------
+const settingIds = ["s-base", "s-country", "s-env", "s-email"];
+const S = () => ({
+  base: document.getElementById("s-base").value.replace(/\/+$/, ""),
+  country: document.getElementById("s-country").value,
+  env: document.getElementById("s-env").value,
+  email: document.getElementById("s-email").value,
+});
+function shellJson(obj) {
+  const s = S();
+  const text = JSON.stringify(obj).replaceAll("__EMAIL__", s.email).replaceAll("__COUNTRY__", s.country).replaceAll("__ENV__", s.env);
+  return '"' + text.replace(/[\\"$`]/g, (c) => "\\" + c).replaceAll("__CHAT__", "$CHAT") + '"';
+}
+function startPayload(site, issue) {
+  const s = S();
+  return {
+    fo_email: s.email, site_id: site, site_name: SITES[site] || String(site), sent_from_route: "test-run", issue,
+    country_config: {}, version: "1.0.0", country: s.country,
+    tablet_metadata: { freeRamMb: 1024, totalRamMb: 4096, batteryPercentage: 80, osVersion: "13", apiLevel: 33, manufacturer: "Samsung", model: "SM-T225", freeStorageGb: 10, totalStorageGb: 32 },
+    reads_sync_status: "idle", writes_sync_status: "idle", user_env: s.env,
+  };
+}
+function command(step) {
+  const { base } = S();
+  const post = (path, body, flags = "-s") => `curl ${flags} -X POST ${base}${path} \\\n  -H "Content-Type: application/json" \\\n  -d ${shellJson(body)}`;
+  if (step.kind === "start") {
+    return `${post("/start-session", startPayload(step.site, step.issue), "-sN")} \\\n  | tee /tmp/sherrif_last.sse | jq -R -r --unbuffered '${STREAM}'\nCHAT=$(sed -n 's/^data: //p' /tmp/sherrif_last.sse | jq -r 'select(.chat_id) | .chat_id'); echo "chat: $CHAT"`;
+  }
+  if (step.kind === "next") return `${post("/record-search/next", { chat_id: "__CHAT__" }, "-sN")} \\\n  | jq -R -r --unbuffered '${STREAM}'`;
+  if (step.kind === "select") {
+    const body = { chat_id: "__CHAT__", doc_id: step.doc_id };
+    if (step.device) body.device_doc = step.device;
+    return `${post("/record-search/select", body)} | jq .`;
+  }
+  return `curl -s -w "\\nHTTP %{http_code}\\n" -X POST ${base}${step.body.path} \\\n  -H "Content-Type: application/json" \\\n  -d ${shellJson(step.body.body)}`;
+}
+
+// --- table --------------------------------------------------------------------------------------
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+const CASES = SECTIONS.flatMap((s) => s.cases);
+let results = {};
+
+function render() {
+  document.getElementById("rows").innerHTML = SECTIONS.map((section) => `
+    <tr class="part"><td colspan="6">${section.id}. ${esc(section.title)}<span>${esc(section.blurb)}</span></td></tr>
+    ${section.cases.map((c) => {
+      const r = results[c.id] || {};
+      const expected = c.steps.flatMap((step, i) => step.expect.map((e) => (c.steps.length > 1 ? `Step ${i + 1}: ` : "") + e));
+      return `
+      <tr data-case="${c.id}" data-status="${r.status || "none"}">
+        <td class="id">${c.id}</td>
+        <td class="case">${esc(c.title)}${c.why ? `<div class="tags">${esc(c.why)}</div>` : ""}<div class="tags">${esc((c.tags || []).join(" · "))}</div></td>
+        <td class="steps">${c.steps.length ? `<ol>${c.steps.map((step, i) => `
+          <li>${esc(step.kind === "start" ? `${step.label}: "${step.issue}"` : step.label)}
+            <details><summary>command</summary><pre data-cmd="${c.id}:${i}">${esc(command(step))}<button class="copy" type="button">Copy</button></pre></details>
+          </li>`).join("")}</ol>` : "<em>No steps</em>"}</td>
+        <td class="expect">${expected.length ? `<ul>${expected.map((e) => `<li>${esc(e)}</li>`).join("")}</ul>` : ""}</td>
+        <td class="result"><div class="toggle" role="group" aria-label="Result for ${c.id}">
+          <button type="button" data-v="pass" aria-pressed="${r.status === "pass"}">Pass</button>
+          <button type="button" data-v="fail" aria-pressed="${r.status === "fail"}">Fail</button>
+        </div></td>
+        <td class="comment"><textarea id="comment-${c.id}" aria-label="Comment for ${c.id}" placeholder="Chat id, what happened, ticket key">${esc(r.comment || "")}</textarea></td>
+      </tr>`;
+    }).join("")}`).join("");
+  applyFilter();
+  updateCounts();
+}
+function refreshCommands() {
+  document.querySelectorAll("[data-cmd]").forEach((pre) => {
+    const [id, i] = pre.dataset.cmd.split(":");
+    pre.firstChild.textContent = command(CASES.find((c) => c.id === id).steps[Number(i)]);
+  });
+}
+function updateCounts() {
+  const n = (v) => CASES.filter((c) => (results[c.id] || {}).status === v).length;
+  const pass = n("pass"), fail = n("fail");
+  document.getElementById("counts").innerHTML = `<b class="p">${pass}</b> passed · <b class="f">${fail}</b> failed · <b>${CASES.length - pass - fail}</b> not run · ${CASES.length} cases`;
+}
+function applyFilter() {
+  const filter = document.getElementById("filter").value;
+  document.querySelectorAll("tr[data-case]").forEach((tr) => { tr.hidden = !(filter === "all" || tr.dataset.status === filter); });
+}
+function savedNow() { document.getElementById("saved").textContent = `Saved ${new Date().toLocaleTimeString()}`; }
+async function save(id, patch) {
+  results[id] = { id, status: null, comment: "", ...(results[id] || {}), ...patch };
+  await putResult(results[id]);
+  savedNow();
+}
+
+// --- events -------------------------------------------------------------------------------------
+document.addEventListener("click", async (e) => {
+  const copy = e.target.closest(".copy");
+  if (copy) {
+    const text = copy.parentElement.firstChild.textContent;
+    try { await navigator.clipboard.writeText(text); copy.textContent = "Copied"; } catch { copy.textContent = "Copy failed"; }
+    setTimeout(() => (copy.textContent = "Copy"), 1400);
+    return;
+  }
+  const toggle = e.target.closest(".toggle button");
+  if (toggle) {
+    const tr = toggle.closest("tr");
+    const status = tr.dataset.status === toggle.dataset.v ? null : toggle.dataset.v;
+    tr.dataset.status = status || "none";
+    tr.querySelectorAll(".toggle button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.v === status)));
+    await save(tr.dataset.case, { status });
+    updateCounts();
+    applyFilter();
+    return;
+  }
+  if (e.target.id === "export") {
+    const blob = new Blob([JSON.stringify(Object.values(results), null, 2)], { type: "application/json" });
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `record-search-results-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+});
+
+const commentTimers = {};
+document.addEventListener("input", (e) => {
+  if (settingIds.includes(e.target.id)) { putSetting(e.target.id, e.target.value); refreshCommands(); return; }
+  if (e.target.id.startsWith("comment-")) {
+    const id = e.target.id.slice(8);
+    const value = e.target.value;
+    clearTimeout(commentTimers[id]);
+    commentTimers[id] = setTimeout(() => save(id, { comment: value }), 400);
+  }
+});
+document.getElementById("filter").addEventListener("change", applyFilter);
+document.getElementById("import").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const rows = JSON.parse(await file.text());
+  for (const row of rows) if (row.id) { results[row.id] = row; await putResult(row); }
+  e.target.value = "";
+  render();
+  savedNow();
+});
+
+render();  // the table straight away; saved results and settings fill in once IndexedDB answers
+(async () => {
+  for (const id of settingIds) {
+    const value = await getSetting(id);
+    if (value != null) document.getElementById(id).value = value;
+  }
+  for (const row of await getAll()) results[row.id] = row;
+  render();
+  // ask Chrome not to evict this data under storage pressure
+  if (navigator.storage && navigator.storage.persist) navigator.storage.persist();
+})();
+</script>
+</body>
+</html>

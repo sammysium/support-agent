@@ -1,0 +1,14 @@
+# kept locally as reference; nothing reads it (relationships live in src/enums/actions.py)
+src/mcp_interface/entities_schema.json
+
+# secrets
+.env
+src/integrations/firebase-service-account.json
+
+# local data
+database.db
+
+# python
+.venv/
+__pycache__/
+*.pyc
