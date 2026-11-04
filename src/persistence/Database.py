@@ -9,10 +9,8 @@ from sqlmodel import Session, SQLModel, create_engine
 from src.utils.get_env import get_env_value
 
 
-# e.g. postgresql+psycopg://user:password@localhost:5432/sherrif
 database_url = get_env_value("DATABASE_URL")
 
-# pre_ping: a connection Postgres dropped while idle is replaced instead of failing the request
 engine = create_engine(database_url, pool_pre_ping=True)
 
 def create_db_and_tables():

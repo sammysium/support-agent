@@ -23,27 +23,23 @@ from src.models.responses.OutgoingResponsePayload import EnableFeatureRequestRes
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # startup: spawn the MCP server once and keep the session open for the app's lifetime
     create_db_and_tables()
     async with MCPClient() as mcp_client:
         app.state.mcp_client = mcp_client
         app.state.mcp_tools = await mcp_client.list_tools()
         yield
-    # shutdown: leaving the block closes the session and stops the server process
 
 app = FastAPI(lifespan=lifespan)
 
 
 @app.exception_handler(AppException)
 async def app_exception_handler(request: Request, exc: AppException):
-    # our exceptions carry their own status (404 unknown chat, 502 Jira down, ...); without this they'd all be 500s
     return JSONResponse(status_code=exc.status_code, content={"detail": exc.message})
 
 @app.get("/")
 def main():
     return {"message": "Hello World for shizzy"}
 
-# what the officer sees while the LLM's tool runs
 TOOL_PROGRESS = {
     "record_is_missing": "Checking your office",
     "feature_is_disabled": "Checking your app settings",
@@ -111,7 +107,6 @@ async def chat_feedback(feedback: ChatFeedback, repo: DatabaseRepoDep):
 
 @app.post("/enable-feature-service-request", status_code=201, response_model=EnableFeatureRequestResponse)
 async def request_service(requested_service: RequestEnablingFeaturePayload, repo: DatabaseRepoDep ):
-    # close it.
     repo.update_issue_status(
         chat_id= requested_service.chat_id,
         new_status= IssueStatus.completed
@@ -158,7 +153,6 @@ async def select_record(pick: RecordPick, bg: BackgroundTasks, repo: DatabaseRep
         raise NoSearchInChatException(chat_id=pick.chat_id)
     request = IncomingRequestPayload.model_validate(issue.incoming)
 
-    # only a record we showed can be picked: it says where it came from
     document = SEARCH_GUIDES[saved["search_guide_code"]]
     record = next((row[document] for row in saved.get("records", []) if row.get(document, {}).get("id") == pick.doc_id), None)
     if record is None:
@@ -181,7 +175,7 @@ def escalate(bg: BackgroundTasks, response: MCPToolDiagnosisResponse, sections: 
 def build_agent_context(request: IncomingRequestPayload) -> AgentContext:
     """What every tool call gets: the officer's request and the live configs. Fails fast (400) on an unknown
     country, before anything runs in the background."""
-    remote_parameters = get_remote_parameters()  # one Remote Config download for both
+    remote_parameters = get_remote_parameters()
     server_remote_config = get_remote_country_config(country=request.country, user_env=request.user_env, parameters=remote_parameters)
     if server_remote_config is None:
         raise RemoteConfigNotFoundException()

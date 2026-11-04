@@ -57,7 +57,7 @@ class NoMatchingRecord(BaseModel):
 class DeviceDocument(BaseModel):
     """The picked record as the device holds it, looked up by its Couchbase id."""
     id: str
-    rev: str  # the revision the device synced
+    rev: str
     syncTs: str | None = None
 
 

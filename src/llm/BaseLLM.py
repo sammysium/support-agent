@@ -8,7 +8,7 @@ from typing import Any
 
 @dataclass
 class LLMResult:
-    responses: list[MCPToolDiagnosisResponse]  # every tool's diagnosis
+    responses: list[MCPToolDiagnosisResponse]
     reply: str | None  # the model's final answer to the officer, in plain English
     failures: list[str] = field(default_factory=list)  # tool calls that failed: "tool: error"
 

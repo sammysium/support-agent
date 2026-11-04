@@ -13,9 +13,7 @@ from src.utils.record_diagnosis import NOTES, office_channel
 OFFLINE = "offline"
 AUTH_ERROR = "auth_error"
 
-# an office whose newest record is older than this hasn't had anything from Fineract in a while
 STALE_AFTER = timedelta(hours=48)
-# below this Couchbase Lite can't save what it downloads
 MIN_FREE_STORAGE_MB = 500
 
 

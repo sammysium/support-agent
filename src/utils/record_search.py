@@ -25,7 +25,6 @@ def search_couchbase(search: RecordSearch, office_ids: list[int], where: str = "
             recommended_actions=[],
             jira_ticket_title="")
 
-    # primary first; every other document the officer mentioned is joined to it
     documents = [primary]
     wheres = [f"{_path(primary, 'type')} = $type_{primary}", f"{_path(primary, 'officeId')} IN $officeIds"]
     named_parameters = {f"type_{primary}": DOCUMENT_TYPES[primary]["DOC_TYPE"], "officeIds": office_ids}

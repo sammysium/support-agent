@@ -33,6 +33,6 @@ class OutgoingResponsePayload(BaseModel):
 
 class EnableFeatureRequestResponse(BaseModel):
     ticket_key: str  # e.g. "SUP-12", what the officer quotes when following up
-    url: str  # the request's page on the service desk portal
+    url: str
 
 

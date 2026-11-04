@@ -45,8 +45,8 @@ async def feature_is_disabled(
       * edit_client_options: status combinations in which a client can be edited.
     """
 
-    device_status = feature_is_enabled(request.country_config, disabled_feature_key)  # what's on the tablet
-    remote_status = feature_is_enabled(server_config, disabled_feature_key)  # live Firebase remote config
+    device_status = feature_is_enabled(request.country_config, disabled_feature_key)
+    remote_status = feature_is_enabled(server_config, disabled_feature_key)
 
     message, actions = REMOTE_CONFIG_DIAGNOSIS[(device_status, remote_status)]
 

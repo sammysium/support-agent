@@ -16,7 +16,7 @@ password = get_env_value("CB_PASSWORD")
 reads_bucket_name = get_env_value("CB_READS_BUCKET_NAME")
 cb_url = get_env_value("CB_URL")
 
-QUERY_LIMIT = 20  # most rows a record search returns
+QUERY_LIMIT = 20
 
 # Sync Gateway's own indexes (it can't serve channels without them) and the ones our queries use
 REQUIRED_INDEXES = [
@@ -77,7 +77,6 @@ class CouchBaseDatabase:
             if self.connected:
                 return
 
-            # Connect options - authentication
             auth = PasswordAuthenticator(
                 username,
                 password,
@@ -86,7 +85,6 @@ class CouchBaseDatabase:
 
             self.cluster = Cluster.connect(cb_url, ClusterOptions(auth))
 
-            # Wait until the cluster is ready for use.
             self.cluster.wait_until_ready(timedelta(seconds=5))
 
             self.offline_reads_bucket = self.cluster.bucket(reads_bucket_name)
